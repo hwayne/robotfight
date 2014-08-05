@@ -36,7 +36,7 @@ class Robot:
 
         adjacent_enemies = self.enemies_around(game)
         if adjacent_enemies:
-            if self.hp < 10 and len(adjacent_enemies) > 1:
+            if self.hp < 15:
                 return ['suicide']
 
             enemy_spaces = adjacent_enemies.keys()
