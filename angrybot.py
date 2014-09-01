@@ -18,24 +18,19 @@ class Robot:
         angry = 8
         is_angry = random.choice([True]*angry+[False]*(max_angry-angry))
 
-        adjacent_enemies = self.enemies_around(game)
-        local_spaces = rg.locs_around(self.location,
-                                      filter_out=('invalid', 'obstacle',
-                                                  'spawn'))
 
-        enemy_spaces = adjacent_enemies.keys()
-        empty_spaces = [e for e in local_spaces
-                        if e not in enemy_spaces]
+        local_enemies = self.local_enemies(game)
+        empty_spaces = [e for e in self.local_spaces()
+                        if e not in local_enemies.keys()]
 
-        if adjacent_enemies:
-            if self.hp < 10 and len(adjacent_enemies) > 1:
+        if local_enemies:
+            if self.hp < 10 and len(local_enemies) > 1:
                 return ['suicide']
 
-            if enemy_spaces and is_angry:
-                return ['attack', random.choice(enemy_spaces)]
+            if is_angry:
+                return ['attack', random.choice(local_enemies.keys())]
             if empty_spaces:
                 return ['move', random.choice(empty_spaces)]
-
             return['guard']
 
         enemies = self.enemies(game)
@@ -50,7 +45,12 @@ class Robot:
                     return ['attack', attack_loc]
 
         return ['move', rg.toward(self.location,
-                                  random.choice(enemies).location)]
+                                  random.choice(self.enemies(game)).location)]
+
+    def local_spaces(self):
+        return rg.locs_around(self.location,
+                              filter_out=('invalid', 'obstacle',
+                                          'spawn'))
 
     def in_square(self, location):
         bot = self.game.robots.get(location)
@@ -62,10 +62,10 @@ class Robot:
         return [e for e in game.robots.itervalues() if
                 e.player_id != self.player_id]
 
-    def enemies_around(self, game):
+    def local_enemies(self, game):
         locs = rg.locs_around(self.location)
         bots = {}
         for loc, bot in game.robots.iteritems():
-            if bot.player_id != self.player_id and loc in locs:
+            if bot.player_id != self.player_id and loc in self.local_spaces():
                 bots[loc] = bot
         return bots
